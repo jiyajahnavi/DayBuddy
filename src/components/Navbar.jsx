@@ -1,215 +1,157 @@
 import React from 'react';
 import { useSenior } from '../context/SeniorContext';
-import { 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX, 
-  AlertTriangle, 
-  Sun, 
-  Moon, 
-  Contrast, 
-  Globe, 
-  Sparkles,
-  Type
-} from 'lucide-react';
+import { HeartHandshake, PhoneCall, Sun, Globe, Volume2, VolumeX, Mic } from 'lucide-react';
 
 export const Navbar = () => {
   const {
     textSize,
     setTextSize,
-    theme,
-    setTheme,
     audioGuidance,
     setAudioGuidance,
     language,
     setLanguage,
-    voiceStatus,
-    startListening,
     triggerEmergencySOS,
+    speak,
     playGuidance,
-    speak
+    activeTab,
+    setActiveTab,
+    startListening,
+    voiceStatus
   } = useSenior();
 
-  const handleLanguageChange = (e) => {
-    const newLang = e.target.value;
-    setLanguage(newLang);
+  const currentDateStr = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  const handleLangChange = (e) => {
+    setLanguage(e.target.value);
     speak(`Language changed to ${e.target.options[e.target.selectedIndex].text}`);
   };
 
   return (
-    <header className="glass-card flex-between" style={{ padding: '1.25rem 1.75rem', gap: '1rem', flexWrap: 'wrap' }}>
-      {/* Brand Identity */}
-      <div className="flex-center" style={{ gap: '1rem' }}>
+    <header className="flex-between" style={{ padding: '0.25rem 0 1rem 0', gap: '1rem', flexWrap: 'wrap' }}>
+      {/* Brand & Tagline */}
+      <div 
+        className="flex-center" 
+        style={{ gap: '0.75rem', cursor: 'pointer' }}
+        onClick={() => {
+          setActiveTab('dashboard');
+          playGuidance("Returned to home dashboard");
+        }}
+      >
         <div 
-          style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #f59e0b, #3b82f6)',
+          style={{ 
+            width: '42px', 
+            height: '42px', 
+            borderRadius: '12px', 
+            background: '#0D9488',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(245, 158, 11, 0.3)'
+            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)'
           }}
         >
-          <Sparkles size={32} color="#ffffff" />
+          <HeartHandshake size={26} color="#ffffff" />
         </div>
         <div>
-          <h1 style={{ fontSize: 'var(--font-title)', fontWeight: 800, margin: 0, lineHeight: 1.1 }}>
-            DayBuddy <span className="text-amber">AI</span>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0D233A', margin: 0, lineHeight: 1.1 }}>
+            DayBuddy
           </h1>
-          <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>
-            Senior Voice & Vision Companion
-          </p>
         </div>
+        <span style={{ color: '#CBD5E1', fontSize: '1.4rem', fontWeight: 300, margin: '0 0.25rem' }}>|</span>
+        <span style={{ fontSize: '0.95rem', color: '#52657A', fontWeight: 500 }}>
+          Your daily support, always <span style={{ color: '#0D9488' }}>💚</span>
+        </span>
       </div>
 
-      {/* Voice Assistant Controls & Wave Status */}
-      <div className="flex-center" style={{ gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 1rem', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+      {/* Right Header Tools */}
+      <div className="flex-center" style={{ gap: '1.25rem', flexWrap: 'wrap' }}>
+        {/* Date & Weather */}
+        <div className="flex-center" style={{ gap: '0.4rem', fontSize: '0.95rem', color: '#52657A', fontWeight: 600 }}>
+          <Sun size={20} style={{ color: '#F59E0B' }} />
+          <span>{currentDateStr}</span>
+        </div>
+
+        <span style={{ color: '#E2E8E4' }}>|</span>
+
+        {/* Mic Speech Button */}
         <button 
-          className={`btn-senior ${voiceStatus === 'listening' ? 'teal' : 'primary'}`}
+          className="btn-pill"
           onClick={startListening}
-          aria-label="Tap to speak voice command"
-          title="Voice Assistant - Click or Say commands"
-          style={{ minWidth: '160px' }}
+          style={{ background: voiceStatus === 'listening' ? '#CCFBF1' : '#FFFFFF', borderColor: '#0D9488' }}
+          title="Tap to Speak Voice Command"
         >
-          {voiceStatus === 'listening' ? (
-            <>
-              <Mic size={24} className="animate-pulse" />
-              <span>Listening...</span>
-            </>
-          ) : voiceStatus === 'speaking' ? (
-            <>
-              <Volume2 size={24} />
-              <span>Speaking...</span>
-            </>
-          ) : (
-            <>
-              <Mic size={24} />
-              <span>Tap to Speak</span>
-            </>
-          )}
+          <Mic size={18} style={{ color: '#0D9488' }} />
+          <span style={{ fontSize: '0.9rem', color: '#0D233A' }}>
+            {voiceStatus === 'listening' ? 'Listening...' : 'Voice Command'}
+          </span>
         </button>
 
-        {/* Animated Wave visual indicator when active */}
-        {voiceStatus !== 'idle' && (
-          <div className="voice-wave" aria-label="Voice Activity Waveform">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        )}
-      </div>
-
-      {/* Senior Accessibility Toolbar */}
-      <div className="flex-center" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
-        {/* Spoken Guidance Toggle */}
-        <button 
-          className="btn-senior"
-          onClick={() => {
-            const next = !audioGuidance;
-            setAudioGuidance(next);
-            if (next) speak("Audio spoken guidance enabled");
-          }}
-          title="Toggle Spoken Audio Guidance"
-          style={{ padding: '0.5rem 1rem', minHeight: '50px' }}
-        >
-          {audioGuidance ? <Volume2 size={22} className="text-teal" /> : <VolumeX size={22} className="text-muted" />}
-          <span style={{ fontSize: '0.9rem' }}>{audioGuidance ? 'Audio ON' : 'Audio OFF'}</span>
-        </button>
-
-        {/* Font Size Switcher */}
-        <div className="flex-center" style={{ gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-          <button 
-            className={`btn-senior ${textSize === 'normal' ? 'primary' : ''}`}
-            onClick={() => { setTextSize('normal'); playGuidance("Normal text size selected"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.75rem', fontSize: '0.9rem' }}
-            title="Normal Font Size"
-          >
-            Aa
-          </button>
-          <button 
-            className={`btn-senior ${textSize === 'large' ? 'primary' : ''}`}
-            onClick={() => { setTextSize('large'); playGuidance("Large text size selected"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.75rem', fontSize: '1.1rem', fontWeight: 800 }}
-            title="Large Font Size (Recommended)"
-          >
-            A+
-          </button>
-          <button 
-            className={`btn-senior ${textSize === 'xlarge' ? 'primary' : ''}`}
-            onClick={() => { setTextSize('xlarge'); playGuidance("Extra Large text size selected"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.75rem', fontSize: '1.3rem', fontWeight: 900 }}
-            title="Extra Large Font Size"
-          >
-            A++
-          </button>
-        </div>
-
-        {/* Contrast Theme Switcher */}
-        <div className="flex-center" style={{ gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-          <button 
-            className={`btn-senior ${theme === 'dark' ? 'primary' : ''}`}
-            onClick={() => { setTheme('dark'); playGuidance("Dark Glass theme active"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.6rem' }}
-            title="Dark Glass Mode"
-          >
-            <Moon size={18} />
-          </button>
-          <button 
-            className={`btn-senior ${theme === 'warm' ? 'primary' : ''}`}
-            onClick={() => { setTheme('warm'); playGuidance("Warm Amber theme active"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.6rem' }}
-            title="Warm Soothing Amber Mode"
-          >
-            <Sun size={18} />
-          </button>
-          <button 
-            className={`btn-senior ${theme === 'contrast' ? 'primary' : ''}`}
-            onClick={() => { setTheme('contrast'); playGuidance("High Contrast Mode active"); }}
-            style={{ minHeight: '44px', padding: '0.3rem 0.6rem' }}
-            title="High Contrast Yellow & Black Mode"
-          >
-            <Contrast size={18} />
-          </button>
-        </div>
-
-        {/* Spoken Language Dropdown */}
-        <div className="flex-center" style={{ gap: '0.4rem', background: 'var(--bg-secondary)', padding: '0.4rem 0.75rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-          <Globe size={20} className="text-amber" />
+        {/* Language Selector */}
+        <div className="flex-center" style={{ position: 'relative' }}>
           <select 
             value={language}
-            onChange={handleLanguageChange}
+            onChange={handleLangChange}
+            className="btn-pill"
             style={{ 
-              background: 'transparent', 
-              color: 'var(--text-main)', 
-              border: 'none', 
-              fontSize: '0.95rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              outline: 'none'
+              paddingRight: '1.75rem', 
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: '#0D233A',
+              appearance: 'auto'
             }}
-            aria-label="Select voice spoken language"
           >
-            <option value="en-US" style={{ background: '#1e293b' }}>English (US)</option>
-            <option value="es-ES" style={{ background: '#1e293b' }}>Español (Spanish)</option>
-            <option value="hi-IN" style={{ background: '#1e293b' }}>Hindi (हिंदी)</option>
-            <option value="fr-FR" style={{ background: '#1e293b' }}>Français (French)</option>
-            <option value="de-DE" style={{ background: '#1e293b' }}>Deutsch (German)</option>
+            <option value="en-US">🌐 English</option>
+            <option value="es-ES">🌐 Español</option>
+            <option value="hi-IN">🌐 Hindi (हिंदी)</option>
+            <option value="fr-FR">🌐 Français</option>
+            <option value="de-DE">🌐 Deutsch</option>
           </select>
         </div>
 
-        {/* Emergency SOS Button */}
+        {/* Font Size Selector */}
+        <div className="flex-center" style={{ gap: '0.4rem' }}>
+          <button 
+            className="btn-pill" 
+            onClick={() => { setTextSize('normal'); playGuidance("Normal text size selected"); }}
+            style={{ 
+              minHeight: '38px', 
+              padding: '0.2rem 0.6rem', 
+              fontSize: '0.9rem',
+              fontWeight: textSize === 'normal' ? 800 : 500,
+              background: textSize === 'normal' ? '#E6F4F1' : '#FFFFFF',
+              borderColor: textSize === 'normal' ? '#0D9488' : '#E2E8E4'
+            }}
+          >
+            A
+          </button>
+          <button 
+            className="btn-pill" 
+            onClick={() => { setTextSize('large'); playGuidance("Large text size selected"); }}
+            style={{ 
+              minHeight: '38px', 
+              padding: '0.2rem 0.6rem', 
+              fontSize: '1rem',
+              fontWeight: textSize === 'large' ? 800 : 600,
+              background: textSize === 'large' ? '#E6F4F1' : '#FFFFFF',
+              borderColor: textSize === 'large' ? '#0D9488' : '#E2E8E4'
+            }}
+          >
+            A+
+          </button>
+        </div>
+
+        {/* Emergency SOS Pill Button */}
         <button 
-          className="btn-senior danger"
+          className="btn-pill sos"
           onClick={triggerEmergencySOS}
-          style={{ minHeight: '52px', padding: '0.5rem 1.25rem', animation: 'pulse 2s infinite' }}
-          title="Click for Emergency Help"
+          style={{ minHeight: '44px', padding: '0.5rem 1.25rem' }}
         >
-          <AlertTriangle size={24} />
-          <span>SOS HELP</span>
+          <PhoneCall size={18} />
+          <span>SOS</span>
         </button>
       </div>
     </header>
