@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSenior } from '../context/SeniorContext';
+import { validateTextLength } from '../utils/security';
 import { 
   ShieldAlert, 
   ShieldCheck, 
@@ -73,8 +74,9 @@ export const ScamDetector = () => {
   ];
 
   const handleAnalyzeText = (textToAnalyze) => {
-    const text = textToAnalyze || inputText;
-    if (!text.trim()) {
+    const rawText = textToAnalyze || inputText;
+    const text = validateTextLength(rawText);
+    if (!text) {
       speak("Please enter or select a message to analyze.");
       return;
     }
