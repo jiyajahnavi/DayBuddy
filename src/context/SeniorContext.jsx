@@ -12,7 +12,11 @@ export const SeniorProvider = ({ children }) => {
   // Navigation state
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'vision' | 'document' | 'guided' | 'scam' | 'architecture'
 
-  // Voice Interaction state
+  // Voice & Speech Synthesis State
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
+  const [voicePitch, setVoicePitch] = useState(1.05); // Warm, friendly pitch
+  const [voiceRate, setVoiceRate] = useState(0.92);   // Clear, unhurried rate
   const [voiceStatus, setVoiceStatus] = useState('idle'); // 'idle' | 'listening' | 'speaking'
   const [lastSpokenText, setLastSpokenText] = useState('');
   const [recognizedText, setRecognizedText] = useState('');
@@ -26,6 +30,46 @@ export const SeniorProvider = ({ children }) => {
     document.body.className = `theme-${theme} size-${textSize}`;
   }, [theme, textSize]);
 
+  // Load High Quality System / Neural / Natural Voices
+  const loadVoices = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      setAvailableVoices(voices);
+
+      // Sort and pick best natural voice for language
+      const bestVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const matchesLang = v.lang.startsWith(language.split('-')[0]);
+        return matchesLang && (
+          name.includes('google') || 
+          name.includes('natural') || 
+          name.includes('enhanced') || 
+          name.includes('premium') || 
+          name.includes('samantha') || 
+          name.includes('serena') || 
+          name.includes('karen') || 
+          name.includes('victoria') || 
+          name.includes('zira') ||
+          name.includes('aria') ||
+          name.includes('jenny')
+        );
+      }) || voices.find(v => v.lang.startsWith(language.split('-')[0])) || voices[0];
+
+      if (bestVoice && !selectedVoiceURI) {
+        setSelectedVoiceURI(bestVoice.voiceURI);
+      }
+    }
+  }, [language, selectedVoiceURI]);
+
+  useEffect(() => {
+    loadVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, [loadVoices]);
+
   // Speech Synthesis (Text-to-Speech)
   const speak = useCallback((text, options = {}) => {
     if (!text || typeof window === 'undefined') return;
@@ -34,9 +78,19 @@ export const SeniorProvider = ({ children }) => {
       window.speechSynthesis.cancel(); // Stop any active speech
 
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = options.rate || 0.92; // Slightly slower speed for senior clarity
-      utterance.pitch = options.pitch || 1.0;
+      utterance.rate = options.rate || voiceRate;
+      utterance.pitch = options.pitch || voicePitch;
       utterance.lang = options.lang || language;
+
+      // Select chosen high-quality voice
+      if (availableVoices.length > 0) {
+        const targetURI = options.voiceURI || selectedVoiceURI;
+        const voiceObj = availableVoices.find(v => v.voiceURI === targetURI) ||
+                         availableVoices.find(v => v.lang.startsWith(language.split('-')[0]));
+        if (voiceObj) {
+          utterance.voice = voiceObj;
+        }
+      }
 
       utterance.onstart = () => {
         setVoiceStatus('speaking');
@@ -55,7 +109,7 @@ export const SeniorProvider = ({ children }) => {
 
       window.speechSynthesis.speak(utterance);
     }
-  }, [language]);
+  }, [availableVoices, selectedVoiceURI, voicePitch, voiceRate, language]);
 
   const stopSpeaking = useCallback(() => {
     if (window.speechSynthesis) {
@@ -70,6 +124,15 @@ export const SeniorProvider = ({ children }) => {
       speak(text);
     }
   }, [audioGuidance, speak]);
+
+  // Test Speech Voice Preset
+  const testVoiceSample = (voiceURI) => {
+    const vObj = availableVoices.find(v => v.voiceURI === voiceURI);
+    const sampleText = vObj 
+      ? `Hello Margaret, I am your DayBuddy voice companion using ${vObj.name}. How can I assist you today?` 
+      : "Hello Margaret, this is your DayBuddy AI assistant voice.";
+    speak(sampleText, { voiceURI });
+  };
 
   // Voice Recognition (Speech-to-Text)
   const [recognitionInstance, setRecognitionInstance] = useState(null);
@@ -183,7 +246,6 @@ export const SeniorProvider = ({ children }) => {
       }
     } else {
       speak("Speech recognition is simulated on this device. Say 'Scan object' or click the buttons below.");
-      // Provide simulated command entry
       setTimeout(() => {
         const sampleCommands = ["Scan object", "Read document", "Check scam message", "Open guided assistant"];
         const randomCmd = sampleCommands[Math.floor(Math.random() * sampleCommands.length)];
@@ -214,6 +276,14 @@ export const SeniorProvider = ({ children }) => {
         setAudioGuidance,
         language,
         setLanguage,
+        availableVoices,
+        selectedVoiceURI,
+        setSelectedVoiceURI,
+        voicePitch,
+        setVoicePitch,
+        voiceRate,
+        setVoiceRate,
+        testVoiceSample,
         activeTab,
         setActiveTab,
         voiceStatus,
